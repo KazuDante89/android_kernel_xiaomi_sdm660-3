@@ -34,14 +34,10 @@
 #include <linux/poll.h>
 #include <linux/reservation.h>
 #include <linux/mm.h>
-#include <linux/kernel.h>
-#include <linux/atomic.h>
 #include <linux/mount.h>
 
 #include <uapi/linux/dma-buf.h>
 #include <uapi/linux/magic.h>
-
-static atomic_long_t name_counter;
 
 static inline int is_dma_buf_file(struct file *);
 
@@ -120,7 +116,6 @@ static int dma_buf_release(struct inode *inode, struct file *file)
 		reservation_object_fini(dmabuf->resv);
 
 	module_put(dmabuf->owner);
-	kfree(dmabuf->buf_name);
 	kfree(dmabuf);
 	return 0;
 }
@@ -544,9 +539,7 @@ struct dma_buf *dma_buf_export(const struct dma_buf_export_info *exp_info)
 	struct reservation_object *resv = exp_info->resv;
 	struct file *file;
 	size_t alloc_size = sizeof(struct dma_buf);
-	char *bufname;
 	int ret;
-	long cnt;
 
 	if (!exp_info->resv)
 		alloc_size += sizeof(struct reservation_object);
@@ -568,17 +561,10 @@ struct dma_buf *dma_buf_export(const struct dma_buf_export_info *exp_info)
 	if (!try_module_get(exp_info->owner))
 		return ERR_PTR(-ENOENT);
 
-	cnt = atomic_long_inc_return(&name_counter);
-	bufname = kasprintf(GFP_KERNEL, "dmabuf%ld", cnt);
-	if (!bufname) {
-		ret = -ENOMEM;
-		goto err_module;
-	}
-
 	dmabuf = kzalloc(alloc_size, GFP_KERNEL);
 	if (!dmabuf) {
 		ret = -ENOMEM;
-		goto err_name;
+		goto err_module;
 	}
 
 	dmabuf->priv = exp_info->priv;
@@ -589,7 +575,6 @@ struct dma_buf *dma_buf_export(const struct dma_buf_export_info *exp_info)
 	init_waitqueue_head(&dmabuf->poll);
 	dmabuf->cb_excl.poll = dmabuf->cb_shared.poll = &dmabuf->poll;
 	dmabuf->cb_excl.active = dmabuf->cb_shared.active = 0;
-	dmabuf->name = bufname;
 
 	if (!resv) {
 		resv = (struct reservation_object *)&dmabuf[1];
@@ -597,7 +582,8 @@ struct dma_buf *dma_buf_export(const struct dma_buf_export_info *exp_info)
 	}
 	dmabuf->resv = resv;
 
-	file = dma_buf_getfile(dmabuf, exp_info->flags);
+	file = anon_inode_getfile("dmabuf", &dma_buf_fops, dmabuf,
+					exp_info->flags);
 	if (IS_ERR(file)) {
 		ret = PTR_ERR(file);
 		goto err_dmabuf;
@@ -620,8 +606,6 @@ struct dma_buf *dma_buf_export(const struct dma_buf_export_info *exp_info)
 
 err_dmabuf:
 	kfree(dmabuf);
-err_name:
-	kfree(bufname);
 err_module:
 	module_put(exp_info->owner);
 	return ERR_PTR(ret);
