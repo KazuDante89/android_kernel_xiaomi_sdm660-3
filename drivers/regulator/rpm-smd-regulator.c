@@ -1222,6 +1222,7 @@ struct rpm_regulator *rpm_regulator_get(struct device *dev, const char *supply)
 		kfree(priv_reg);
 		return ERR_PTR(-ENOMEM);
 	}
+
 	priv_reg->rdev->reg_data	= priv_reg;
 	priv_reg->rpm_vreg		= rpm_vreg;
 	priv_reg->rdesc.name		= framework_reg->rdesc.name;
