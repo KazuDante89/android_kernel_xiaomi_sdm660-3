@@ -283,7 +283,7 @@ int msm_dss_enable_vreg(struct dss_vreg *in_vreg, int num_vreg, int enable)
 #elif defined CONFIG_MACH_XIAOMI_WAYNE
 			if(enable_gesture_mode) {
 #elif defined CONFIG_MACH_XIAOMI_WHYRED
-			if(enable_gesture_mode || synaptics_gesture_func_on) {
+			if(synaptics_gesture_func_on) {
 #endif
 				if( (strcmp(in_vreg[i].vreg_name,"lab")==0) ||
 						(strcmp(in_vreg[i].vreg_name,"ibb")==0) ||
@@ -342,7 +342,7 @@ int msm_dss_enable_vreg(struct dss_vreg *in_vreg, int num_vreg, int enable)
 #elif defined CONFIG_MACH_XIAOMI_WAYNE
 			if(enable_gesture_mode) {
 #elif defined CONFIG_MACH_XIAOMI_WHYRED
-			if (enable_gesture_mode || synaptics_gesture_func_on) {
+			if (synaptics_gesture_func_on) {
 #endif
 				if( (strcmp(in_vreg[i].vreg_name,"lab")==0) ||
 						(strcmp(in_vreg[i].vreg_name,"ibb")==0) ||
