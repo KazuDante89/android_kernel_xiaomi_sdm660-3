@@ -591,7 +591,7 @@ static const struct adreno_a5xx_core adreno_gpu_core_a509 = {
 	.base = {
 		DEFINE_ADRENO_REV(ADRENO_REV_A509, 5, 0, 9, ANY_ID),
 		.features = ADRENO_PREEMPTION | ADRENO_64BIT |
-			ADRENO_CONTENT_PROTECTION | ADRENO_CPZ_RETENTI>
+			ADRENO_CONTENT_PROTECTION | ADRENO_CPZ_RETENTION,
 		.gpudev = &adreno_a5xx_gpudev,
 		.gmem_size = (SZ_256K + SZ_16K),
 		.busy_mask = 0xfffffffe,
